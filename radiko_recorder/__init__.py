@@ -1,3 +1,9 @@
+import sys
+
+if sys.version_info < (3, 8):
+    raise ImportError(
+        f'You are using an unsupported version of Python. Only Python versions 3.8 and above are supported by ihc_reporter') # noqa: F541
+
 import re
 import argparse
 from datetime import datetime
