@@ -22,7 +22,7 @@ class Logger:
             os.mkdir(logfile_dir)
         
         logger = logging.getLogger(name)
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.INFO)
         logger.addHandler(Logger._get_file_handler(logfile_path))
         logger.addHandler(Logger._get_console_handler())
         logger.propagate = False

@@ -1,9 +1,8 @@
-import os
-import time
+from datetime import datetime, timedelta
 
 import ffmpeg
 import requests
-from datetime import datetime, timedelta
+from bs4 import BeautifulSoup
 
 from .auth_handler import RadikoAuthHandler
 from .utils import Logger
@@ -20,7 +19,64 @@ class RadikoPlayer(object):
         area_id : str
             RadikoのエリアID
         '''
+        self._area_id = area_id
         self._headers = self._make_headers(area_id)
+    
+    def record(self, station_id: str, start_time: datetime, duration_minutes: int, output_path: str):
+        '''
+        Radikoのストリームを録音して保存する
+
+        Parameters
+        ----------
+        station_id : str
+            放送局ID
+        start_time : datetime
+            録音開始時間
+        duration_minutes : int
+            録音時間（分）
+        output_path : str
+            保存先のファイルパス
+        '''
+        ft = self._format_datetime(start_time)
+        end_time = start_time + timedelta(minutes=duration_minutes)
+        to = self._format_datetime(end_time)
+        
+        stream_url = f"https://radiko.jp/v2/api/ts/playlist.m3u8?station_id={station_id}&l=15&ft={ft}&to={to}"
+        headers = f"X-RADIKO-AUTHTOKEN: {self._headers['X-Radiko-AuthToken']}"
+        
+        # ffmpegコマンドを実行して録音
+        (
+            ffmpeg
+            .input(filename=stream_url, headers=headers)
+            .output(filename=output_path, acodec='copy')
+            .run(overwrite_output=True)
+        )
+        logger.info(f'Successfully recorded {output_path}')
+    
+    def get_station_list(self) -> list[dict]:
+        '''
+        放送局リストを取得する
+        
+        Returns
+        -------
+        station_list : list[dict]
+            放送局リスト
+        '''
+        url = f'https://radiko.jp/v3/station/list/{self._area_id}.xml'
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'xml')
+        
+        station_list = []
+        for s in soup.find_all('station'):
+            station_list.append(
+                {
+                    'id': s.find('id').text,
+                    'name': s.find('name').text,
+                    'ascii_name': s.find('ascii_name').text,
+                    'ruby': s.find('ruby').text
+                }
+            )
+        return station_list
     
     def _make_headers(self, area_id: str) -> dict:
         '''
@@ -41,116 +97,18 @@ class RadikoPlayer(object):
         logger.debug(f'headers: {headers}')
         return headers
     
-    def record(self, station: str, output_path: str, record_time: int):
+    def _format_datetime(self, dt: datetime) -> str:
         '''
-        放送を録音する
+        日時をフォーマットする
         
         Parameters
         ----------
-        station : str
-            放送局名
-        output_path : str
-            出力ファイルのパス
-        record_time : int
-            録音時間（秒）
-        '''
-        end_time = datetime.now() + timedelta(seconds=record_time)
-        chunk_files = []
-
-        # 録音を開始する
-        while datetime.now() < end_time:
-            remaining_time = (end_time - datetime.now()).total_seconds()
-            chunk_time = min(remaining_time, 5)  # 5秒ごとに録音
-            output_chunk = f"{output_path}.{int(time.time())}.aac"
-            chunk_files.append(output_chunk)
-            
-            # ストリームを取得して録音
-            stream_url = self._get_stream_url(station)
-            (
-                ffmpeg
-                .input(filename=stream_url, f='aac', acodec='aac')
-                .output(filename=output_chunk, t=chunk_time)
-                .run(overwrite_output=True)
-            )
-            
-            time.sleep(chunk_time)  # 追加の遅延を防ぐために録音時間だけ待機
-            logger.info(f'Recorded {station} for {chunk_time} seconds to {output_chunk}')
-
-        # チャンクファイルのリストを作成
-        with open('filelist.txt', 'w') as f:
-            for chunk in chunk_files:
-                f.write(f"file '{chunk}'\n")
-        
-        # チャンクファイルを結合
-        (
-            ffmpeg
-            .input(filename='filelist.txt', format='concat', safe=0)
-            .output(filename=output_path, c='copy')
-            .run(overwrite_output=True)
-        )
-        
-        # 一時ファイルの削除
-        for chunk in chunk_files:
-            os.remove(chunk)
-        
-        logger.info(f'Recorded {station} for {record_time} seconds to {output_path}')
-    
-    def get_program_table(self, station: str) -> str:
-        '''
-        番組表を取得する
-        
-        Parameters
-        ----------
-        station : str
-            放送局名
+        dt : datetime
+            日時
         
         Returns
         -------
-        program_table : str
-            番組表
+        formatted_dt : str
+            フォーマットされた日時
         '''
-        response = requests.get(
-            url=f'http://radiko.jp/v3/program/station/weekly/{station}.xml',
-            headers=self._headers
-        )
-        return response.text
-    
-    def _get_m3u8_url(self, station: str) -> str:
-        '''
-        m3u8ファイルのURLを取得する
-        
-        Parameters
-        ----------
-        station : str
-            放送局名
-        
-        Returns
-        -------
-        m3u8_url : str
-            m3u8ファイルのURL
-        '''
-        response = requests.get(
-            url=f'http://c-radiko.smartstream.ne.jp/{station}/_definst_/simul-stream.stream/playlist.m3u8',
-            headers=self._headers
-        )
-        m3u8_url = response.content.splitlines()[-1]
-        return m3u8_url
-    
-    def _get_stream_url(self, station: str) -> str:
-        '''
-        ストリームのURLを取得する
-        
-        Parameters
-        ----------
-        station : str
-            放送局名
-        
-        Returns
-        -------
-        stream_url : str
-            ストリームのURL
-        '''
-        m3u8_url = self._get_m3u8_url(station)
-        response = requests.get(m3u8_url)
-        stream_url = response.content.splitlines()[-1]
-        return stream_url
+        return dt.strftime('%Y%m%d%H%M%S')
