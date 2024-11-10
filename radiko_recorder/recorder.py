@@ -45,6 +45,7 @@ class RadikoPlayer(object):
         headers = f"X-RADIKO-AUTHTOKEN: {self._headers['X-Radiko-AuthToken']}"
         
         # ffmpegコマンドを実行して録音
+        logger.info(f'Recording {output_path}...')
         (
             ffmpeg
             .input(filename=stream_url, headers=headers)

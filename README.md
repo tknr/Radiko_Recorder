@@ -5,20 +5,6 @@ Radiko Recorderは、Radikoからラジオ放送を録音するためのツー�
 ## ■必要条件
 
 - Python 3.8以上
-- 必要なPythonパッケージ（`requirements.txt`が提供されている場合、それを使用してインストール）
-
-## ■インストール
-
-1. リポジトリをクローンします：
-    ```sh
-    git clone https://github.com/XXXFQ/Radiko_Recorder.git
-    cd Radiko_Recorder
-    ```
-
-2. 必要なPythonパッケージをインストールします：
-    ```sh
-    pip install -r requirements.txt
-    ```
 
 ## ■使い方
 
