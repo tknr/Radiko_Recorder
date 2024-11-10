@@ -4,15 +4,14 @@ if sys.version_info < (3, 8):
     raise ImportError(
         f'You are using an unsupported version of Python. Only Python versions 3.8 and above are supported by ihc_reporter') # noqa: F541
 
-import re
 import argparse
+import re
 from datetime import datetime
+from pathlib import Path
 
+from .version import __version__
 from .recorder import RadikoPlayer
-from .config import (
-    RADIKO_AREA_ID,
-    OUTPUT_DIR
-)
+from .config import RADIKO_AREA_ID
 
 def record_radio(area_id: str, station_id: str, start_time: str, duration_minutes: int):
     '''
@@ -33,6 +32,9 @@ def record_radio(area_id: str, station_id: str, start_time: str, duration_minute
     if not _is_valid_area_id(area_id):
         raise ValueError(f"Invalid area ID: {area_id}")
     
+    # 出力ファイルのパス
+    OUTPUT_DIR = Path("output")
+    OUTPUT_DIR.mkdir(exist_ok=True)
     output_path = OUTPUT_DIR / f'{station_id}_{datetime.now().strftime("%Y%m%d%H%M%S")}.aac'
     
     # ラジオを録音
@@ -97,6 +99,22 @@ def init_parser() -> argparse.ArgumentParser:
     parser.add_argument('duration_minutes', type=int, nargs='?', help='Duration (minutes)', default=60)
     return parser
 
+def _check_args(args: argparse.Namespace) -> bool:
+    '''
+    必須引数が提供されているかをチェックする
+    
+    Parameters
+    ----------
+    args : argparse.Namespace
+        コマンドライン引数
+    
+    Returns
+    -------
+    bool
+        必須引数が提供されているかどうか
+    '''
+    return all([args.station_id, args.start_time, args.duration_minutes])
+
 def main(argv=None):
     '''
     メイン関数
@@ -110,7 +128,7 @@ def main(argv=None):
         return
     
     # 必須引数のチェック
-    if not all([args.station_id, args.start_time, args.duration_minutes]):
+    if not _check_args(args):
         parser.print_usage()
         print("Station ID, start time, and duration minutes are required unless using the --station-list option.")
         return

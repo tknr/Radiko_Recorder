@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "radiko-recorder"
+version = "0.1.0"
+description = ""
+authors = ["ARM0930 <72128692+XXXFQ@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.14"
+beautifulsoup4 = "^4.12.3"
+colorlog = "^6.9.0"
+ffmpeg-python = "^0.2.0"
+requests = "^2.32.3"
+python-dotenv = "^1.0.1"
+
+[tool.poetry.group.dev.dependencies]
+pyinstaller = "^6.11.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
