@@ -7,13 +7,11 @@ if sys.version_info < (3, 8):
 import argparse
 import re
 from datetime import datetime
+from pathlib import Path
 
 from .version import __version__
 from .recorder import RadikoPlayer
-from .config import (
-    RADIKO_AREA_ID,
-    OUTPUT_DIR
-)
+from .config import RADIKO_AREA_ID
 
 def record_radio(area_id: str, station_id: str, start_time: str, duration_minutes: int):
     '''
@@ -34,6 +32,9 @@ def record_radio(area_id: str, station_id: str, start_time: str, duration_minute
     if not _is_valid_area_id(area_id):
         raise ValueError(f"Invalid area ID: {area_id}")
     
+    # 出力ファイルのパス
+    OUTPUT_DIR = Path("output")
+    OUTPUT_DIR.mkdir(exist_ok=True)
     output_path = OUTPUT_DIR / f'{station_id}_{datetime.now().strftime("%Y%m%d%H%M%S")}.aac'
     
     # ラジオを録音
