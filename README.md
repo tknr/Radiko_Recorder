@@ -1,20 +1,40 @@
 # Radiko Recorder
 
-Radikoからラジオ放送を録音するためのツールです。
+本ツールは、Radikoからラジオ放送を録音するためのアプリケーションです。
 
-## ■必要条件
+## 1. 必要条件
 
-- Python 3.11以上
+本ツールを使用する前に、以下の条件を満たしていることを確認してください：
 
-## ■放送局リストの表示
+- `ffmpeg`のインストール
+  - 録音機能を使用するには、ffmpegが必要です。
+  - `ffmpeg`がインストールされていない場合、以下のコマンドを使用してインストールしてください：
 
-放送局のリストを表示するには、`-sl`または`--station-list`オプションを使用します：
-
+**Ubuntu/Debian**:
 ```sh
-radiko-recorder -sl
+sudo apt update
+sudo apt install ffmpeg
 ```
 
-## ■放送局の録音
+**Mac (Homebrew)**:
+```sh
+brew install ffmpeg
+```
+
+**Windows**:
+1. [公式サイト](https://ffmpeg.org/download.html)からダウンロードしてください。
+2. システム環境変数にffmpegのパスを追加してください。
+
+
+## 2. 放送局リストの表示
+
+放送局のリストを表示するには、`-s`または`--station-list`オプションを使用します：
+
+```sh
+radiko-recorder -s
+```
+
+## 3. 放送局の録音
 
 ラジオ放送を録音するには、以下のコマンドを使用します：
 
@@ -28,13 +48,14 @@ radiko-recorder <station_id> <start_time> <duration_minutes>
 
 例:
 ```sh
-radiko-recorder FMGUNMA 20240604000000 50
+radiko-recorder FMT 20241120120000 50
 ```
 
-これは、2024年6月4日00:00:00から50分間、FMGUNMA局を録音します。
+これは、2024年11月20日12:00:00から50分間、TOKYO FM局からの放送を録音します。
 
-## ■ライセンス
-このプロジェクトはMITライセンスの下でライセンスされています。
+## 4. ライセンス
+本プロジェクトは、MITライセンスの下でライセンスされています。
+詳細については、[LICENSEファイル](./LICENSE)を参照してください。
 
-## ■著作権表示
-© 2024 ARM
+## 5. 著作権表示
+Copyright (c) 2024 ARM
