@@ -123,8 +123,11 @@ def main(argv=None):
     args = parser.parse_args(argv)
     
     if args.station_list:
-        # 放送局リストを表示
-        _show_station_list(args.area_id)
+        try:
+            # 放送局リストを表示
+            _show_station_list(args.area_id)
+        except ValueError as e:
+            print(e)
         return
     
     # 必須引数のチェック
